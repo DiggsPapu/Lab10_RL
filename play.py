@@ -23,7 +23,9 @@ def default_policy(observation: Any, action_space: gym.spaces.Discrete) -> int:
     """
     # Acciones relevantes para Galaxian:
     # 0: NOOP, 1: FIRE, 3: RIGHT, 4: LEFT, 11: RIGHTFIRE, 12: LEFTFIRE
-    relevant_actions = [0, 1, 3, 4, 11, 12]
+    # De forma que galaxian se mueve de izquierda a derecha y dispara dado que el objetivo es eliminar naves enemigas.
+    # Noop es que se mantiene en el mismo estado sin hacer nada.
+    relevant_actions = [0, 1, 2, 3, 4, 5]
     return np.random.choice(relevant_actions)
 
 def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
