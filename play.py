@@ -1,16 +1,13 @@
-# play.py (CÓDIGO CORREGIDO Y COMPLETO)
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo
 import numpy as np
 import time
 from datetime import datetime
 import os
-import ale_py # Asegura el registro del namespace ALE/
+import ale_py 
 from typing import Callable, Any
 
-# --- Configuración del Estudiante ---
 STUDENT_EMAIL_PREFIX = "alo20172"
-# --- Fin Configuración del Estudiante ---
 
 def default_policy(observation: Any, action_space: gym.spaces.Discrete) -> int:
     """
@@ -42,24 +39,16 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     Returns:
         str: El nombre del archivo de video generado.
     """
-    # 1. Configuración del Video
     VIDEO_FOLDER = "videos_demo"
     os.makedirs(VIDEO_FOLDER, exist_ok=True)
 
-    # El nombre de archivo inicial es temporal. Lo renombraremos al final.
     temp_video_path = os.path.join(VIDEO_FOLDER, "temp_video_recording.mp4")
 
-    # 2. Inicialización del Entorno con Wrapper de Grabación
-    # *** CORRECCIÓN CLAVE: full_action_space=True ***
-    # Esto asegura que el entorno acepte acciones con índices 11 y 12.
     env = gym.make(
         "ALE/Galaxian-v5", 
         render_mode="rgb_array", 
         full_action_space=True 
     )
-    # ---------------------------------------------
-    
-    # El wrapper RecordVideo debe envolver el entorno base
     env = RecordVideo(
         env,
         video_folder=VIDEO_FOLDER,
@@ -74,7 +63,7 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     truncated = False
     total_reward = 0
 
-    # 3. Ejecución del Episodio
+    # Ejecución del Episodio
     print(f"Iniciando grabación del episodio en {env.spec.id}...")
     
     timestamp_inicio = datetime.now()
@@ -82,22 +71,17 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     while not done and not truncated:
         action = policy(observation, env.action_space) 
         
-        # El wrapper RecordVideo llama a step()
         observation, reward, done, truncated, info = env.step(action)
         total_reward += reward
 
     print(f"Episodio finalizado. Puntuación alcanzada: {total_reward}")
 
-    # 4. Cerrar el Entorno y Finalizar la Grabación
-    # Al cerrar el entorno, RecordVideo guarda el video.
+    # Cerrar el Entorno y Finalizar la Grabación
     env.close()
     
-    # 5. Renombrar el Video con el Formato Requerido
-    
-    # Formato de timestamp: AAAAMMDDHHMM
+    # Renombrar el Video con el Formato Requerido
     timestamp_str = timestamp_inicio.strftime("%Y%m%d%H%M")
     
-    # Formato: <correo_estudiante>_<timestamp_episodio>_<puntuación_alcanzada>.mp4
     final_filename = (
         f"{STUDENT_EMAIL_PREFIX}_{timestamp_str}_{int(total_reward)}.mp4"
     )
@@ -107,7 +91,6 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     generated_files = [f for f in os.listdir(VIDEO_FOLDER) if f.startswith("temp_video_recording")]
     
     if generated_files:
-        # Tomar el archivo generado y renombrarlo
         actual_video_path = os.path.join(VIDEO_FOLDER, generated_files[0])
         os.rename(actual_video_path, final_filepath)
         print(f"Video guardado exitosamente como: {final_filename}")
