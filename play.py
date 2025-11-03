@@ -1,13 +1,16 @@
-# play.py
+# play.py (CÓDIGO CORREGIDO Y COMPLETO)
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo
 import numpy as np
 import time
 from datetime import datetime
 import os
+import ale_py # Asegura el registro del namespace ALE/
 from typing import Callable, Any
 
+# --- Configuración del Estudiante ---
 STUDENT_EMAIL_PREFIX = "alo20172"
+# --- Fin Configuración del Estudiante ---
 
 def default_policy(observation: Any, action_space: gym.spaces.Discrete) -> int:
     """
@@ -21,8 +24,8 @@ def default_policy(observation: Any, action_space: gym.spaces.Discrete) -> int:
     Returns:
         int: La acción a tomar.
     """
-    # En Galaxian, las acciones relevantes son 0-5 y 11-12
-    # Aquí usamos un subconjunto común de acciones para Atari (NOOP, FIRE, RIGHT, LEFT)
+    # Acciones relevantes para Galaxian:
+    # 0: NOOP, 1: FIRE, 3: RIGHT, 4: LEFT, 11: RIGHTFIRE, 12: LEFTFIRE
     relevant_actions = [0, 1, 3, 4, 11, 12]
     return np.random.choice(relevant_actions)
 
@@ -47,15 +50,25 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     temp_video_path = os.path.join(VIDEO_FOLDER, "temp_video_recording.mp4")
 
     # 2. Inicialización del Entorno con Wrapper de Grabación
-    env = gym.make("ALE/Galaxian-v5", render_mode="rgb_array")
+    # *** CORRECCIÓN CLAVE: full_action_space=True ***
+    # Esto asegura que el entorno acepte acciones con índices 11 y 12.
+    env = gym.make(
+        "ALE/Galaxian-v5", 
+        render_mode="rgb_array", 
+        full_action_space=True 
+    )
+    # ---------------------------------------------
+    
+    # El wrapper RecordVideo debe envolver el entorno base
     env = RecordVideo(
         env,
         video_folder=VIDEO_FOLDER,
         name_prefix="temp_video_recording",
-        episode_trigger=lambda x: True,
+        episode_trigger=lambda x: True, # Graba el único episodio
         disable_logger=True
     )
     
+    # Inicialización del episodio
     observation, info = env.reset(seed=int(time.time()))
     done = False
     truncated = False
@@ -69,27 +82,32 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
     while not done and not truncated:
         action = policy(observation, env.action_space) 
         
+        # El wrapper RecordVideo llama a step()
         observation, reward, done, truncated, info = env.step(action)
         total_reward += reward
 
     print(f"Episodio finalizado. Puntuación alcanzada: {total_reward}")
 
     # 4. Cerrar el Entorno y Finalizar la Grabación
+    # Al cerrar el entorno, RecordVideo guarda el video.
     env.close()
     
     # 5. Renombrar el Video con el Formato Requerido
     
+    # Formato de timestamp: AAAAMMDDHHMM
     timestamp_str = timestamp_inicio.strftime("%Y%m%d%H%M")
     
+    # Formato: <correo_estudiante>_<timestamp_episodio>_<puntuación_alcanzada>.mp4
     final_filename = (
         f"{STUDENT_EMAIL_PREFIX}_{timestamp_str}_{int(total_reward)}.mp4"
     )
     final_filepath = os.path.join(VIDEO_FOLDER, final_filename)
     
+    # Buscar el archivo generado por el wrapper (tiene un timestamp en su nombre)
     generated_files = [f for f in os.listdir(VIDEO_FOLDER) if f.startswith("temp_video_recording")]
     
     if generated_files:
-        # Asumiendo que solo se grabó un episodio, tomamos el primer archivo
+        # Tomar el archivo generado y renombrarlo
         actual_video_path = os.path.join(VIDEO_FOLDER, generated_files[0])
         os.rename(actual_video_path, final_filepath)
         print(f"Video guardado exitosamente como: {final_filename}")
@@ -99,8 +117,6 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
         return ""
 
 if __name__ == '__main__':
-    # La política que usted utilizará será su agente entrenado.
-    # Aquí se utiliza una política de ejemplo (aleatoria) para la demostración.
     final_video_name = record_episode(policy=default_policy)
     
     if final_video_name:
