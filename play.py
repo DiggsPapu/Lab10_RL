@@ -6,6 +6,19 @@ from datetime import datetime
 import os
 import ale_py 
 from typing import Callable, Any
+import torch
+from src.utils import preprocess_observation
+from src.trainning.dqn_train import DQNNetwork
+# dqn_model = DQNNetwork(action_space=6).cuda()
+# dqn_model.load_state_dict(torch.load("dqn_galaxian.pt"))
+# dqn_model.eval()
+
+# def dqn_policy(obs, action_space):
+#     state = preprocess_observation(obs)
+#     with torch.no_grad():
+#         q_values = dqn_model(torch.tensor(state).unsqueeze(0).cuda())
+#         return torch.argmax(q_values).item()
+
 
 STUDENT_EMAIL_PREFIX = "alo20172"
 
