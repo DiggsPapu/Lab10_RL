@@ -8,17 +8,8 @@ import ale_py
 from typing import Callable, Any
 import torch
 from src.utils import preprocess_observation
-from src.trainning.dqn_train import DQNNetwork
-# dqn_model = DQNNetwork(action_space=6).cuda()
-# dqn_model.load_state_dict(torch.load("dqn_galaxian.pt"))
-# dqn_model.eval()
-
-# def dqn_policy(obs, action_space):
-#     state = preprocess_observation(obs)
-#     with torch.no_grad():
-#         q_values = dqn_model(torch.tensor(state).unsqueeze(0).cuda())
-#         return torch.argmax(q_values).item()
-
+from src.trainning.dqn_train import dqn_policy
+from src.trainning.a2c import a2c_policy
 
 STUDENT_EMAIL_PREFIX = "alo20172"
 
@@ -115,7 +106,13 @@ def record_episode(policy: Callable[[Any, gym.spaces.Discrete], int]) -> str:
         return ""
 
 if __name__ == '__main__':
-    final_video_name = record_episode(policy=default_policy)
+    final_video_name = record_episode(policy=dqn_policy)
+    
+    if final_video_name:
+        print(f"\n--- Tarea Completada ---")
+        print(f"El archivo '{final_video_name}' es su entregable de video.")
+    
+    final_video_name = record_episode(policy=a2c_policy)
     
     if final_video_name:
         print(f"\n--- Tarea Completada ---")
